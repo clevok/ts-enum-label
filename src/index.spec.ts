@@ -1,4 +1,4 @@
-import { DefineEnumLabel, CustomStatus } from '.'
+import { CustomStatus } from '.'
 
 it('CustomEnum测试', () => {
     const LiquidUnitEnum = CustomStatus({
@@ -110,30 +110,4 @@ it('CustomEnum测试Enum', () => {
         value: 2,
         label: 'ounce',
     })
-})
-
-it('DefineEnumLabel', () => {
-    enum LiquidUnitEnum {
-        ML = 1,
-        OZ_UA = 2,
-    }
-    const LiquidUnitLabel = DefineEnumLabel({
-        Enum: LiquidUnitEnum,
-        Values: [
-            { value: LiquidUnitEnum.ML, label: 'ml' },
-            { value: LiquidUnitEnum.OZ_UA, label: 'oz_ua' },
-        ] as const,
-    })
-
-    expect(LiquidUnitLabel.OZ_UA).toEqual({
-        value: LiquidUnitEnum.OZ_UA,
-        label: 'oz_ua',
-    })
-
-    expect(LiquidUnitLabel.values()).toEqual([
-        { value: LiquidUnitEnum.ML, label: 'ml' },
-        { value: LiquidUnitEnum.OZ_UA, label: 'oz_ua' },
-    ])
-
-    expect(LiquidUnitLabel(LiquidUnitEnum.ML)).toEqual('ml')
 })

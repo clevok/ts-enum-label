@@ -1,6 +1,29 @@
+/**
+ * 
+ * @param config 
+ * @returns 
+ * 
+```js
+enum LiquidUnitEnum {
+        ML = 0,
+        OZ_UA = 1,
+        OZ_UK = 2,
+    }
+
+    const LiquidUnitEnumStatus = CustomStatus({
+
+         ML: [LiquidUnitEnum.ML, 'milliliter'],
+
+         OZ_UA: [LiquidUnitEnum.OZ_UA, 'ounce'],
+
+         OZ_UK: [LiquidUnitEnum.OZ_UK, 'ounce'],
+     } as const)
+
+```
+ */
 export function CustomStatus<
     IConfig extends {
-        [key: string]: Readonly<[string | number, unknown]>
+        [key: string]: Readonly<[string | number, any]>
     },
 >(config: IConfig) {
     type IConfigKey = keyof IConfig
@@ -54,15 +77,19 @@ export function CustomStatus<
         return find(keyOrValue)?.label
     }
 
-    const values = () => {
+    const values = <T extends IConfigKey>(): {
+        key: T
+        value: IConfig[T][0]
+        label: IConfig[T][1]
+    }[] => {
         return Object.keys(config).map((key) => {
             const [value, label] = config[key]
             return { key, value, label }
-        })
+        }) as any
     }
 
     type GetValue<IConfig> = IConfig extends {
-        [key: string]: Readonly<[infer R, unknown]>
+        [key: string]: Readonly<[infer R, any]>
     }
         ? R
         : never
@@ -102,79 +129,5 @@ export function CustomStatus<
         [P in IConfigKey]: IConfig[P][0]
     } & {
         [F in GetValue<IConfig>]: IConfigKey
-    }
-}
-
-/**
- * 
- * @example
-```js
-enum LiquidUnitEnum {
-    ML = 1,
-    OZ_UA = 2,
-}
-const LiquidUnitLabel = DefineEnumLabel(() => {
-    return {
-        Enum: LiquidUnitEnum,
-        Values: [
-            { value: LiquidUnitEnum.ML, label: 'ml' },
-            { value: LiquidUnitEnum.OZ_UA, label: 'oz_ua' },
-        ] as const,
-    }
-})
-```
- * 
- */
-export function DefineEnumLabel<
-    E extends { [key: string]: any },
-    V extends Readonly<{ value: string | number; label: unknown }[]>,
->(
-    callback:
-        | (() => {
-              Enum: E
-              Values: V
-          })
-        | {
-              Enum: E
-              Values: V
-          },
-) {
-    type GetLabel<T, K> = T extends { value: K; label: infer R } ? R : never
-
-    const { Enum, Values } =
-        typeof callback === 'function' ? callback() : callback
-
-    function getLabelByValue<T extends V[number]['value']>(v: T) {
-        return Values.find((value) => value.value === v)?.label as GetLabel<
-            V[number],
-            T
-        >
-    }
-
-    /**
-     *
-     * 获取 [values, label] 数组
-     * @returns
-     */
-    const values = () => [...Values]
-
-    /**
-     * 获取 value,label 对象
-     * @returns
-     */
-    const valueOf = <T extends V[number]['value']>(v: T) =>
-        Values.find((value) => value.value === v) as {
-            value: T
-            label: GetLabel<V[number], T>
-        }
-
-    Object.keys(Enum).forEach((enumKey) => {
-        getLabelByValue[enumKey] = valueOf(enumKey) || valueOf(Enum[enumKey])
-    })
-
-    getLabelByValue['values'] = values
-
-    return getLabelByValue as typeof getLabelByValue & {
-        [key in keyof E]: V[number]
     }
 }
