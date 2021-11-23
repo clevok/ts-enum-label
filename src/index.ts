@@ -117,10 +117,6 @@ export function CustomStatus<
         getLabel[enumKey] = Enum[enumKey]
     })
 
-    Object.keys(Enum).forEach((enumKey) => {
-        getLabel[enumKey] = Enum[enumKey]
-    })
-
     return getLabel as typeof getLabel & {
         values: typeof values
         find: typeof find

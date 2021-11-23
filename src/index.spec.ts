@@ -1,4 +1,4 @@
-import { CustomStatus } from '.'
+import { CustomStatus } from '../lib/index'
 
 it('CustomEnum测试', () => {
     const LiquidUnitEnum = CustomStatus({
@@ -42,6 +42,10 @@ it('CustomEnum测试', () => {
         { value: 2, label: 'ounce', key: 'OZ_UK' },
     ])
 
+    expect(LiquidUnitEnum.find(0)).toEqual({
+        value: 0,
+        label: 'milliliter',
+    })
     expect(LiquidUnitEnum.find(LiquidUnitEnum.ML)).toEqual({
         value: 0,
         label: 'milliliter',
@@ -51,6 +55,7 @@ it('CustomEnum测试', () => {
         label: 'ounce',
     })
 
+    expect(LiquidUnitEnum(0)).toEqual('milliliter')
     expect(LiquidUnitEnum(LiquidUnitEnum.ML)).toEqual('milliliter')
     expect(LiquidUnitEnum(LiquidUnitEnum.OZ_UK)).toEqual('ounce')
 })
@@ -111,3 +116,9 @@ it('CustomEnum测试Enum', () => {
         label: 'ounce',
     })
 })
+
+const Labem = [
+    { key: '', value: '', label: '' },
+    { key: '', value: '', label: '' },
+    { key: '', value: '', label: '' },
+]
