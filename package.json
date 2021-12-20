@@ -1,7 +1,6 @@
 {
-    "name": "ts-enum-label",
-    "version": "0.1.2",
-    "description": "ts-enum-label",
+    "name": "vue3-orm",
+    "version": "0.1.0",
     "main": "./lib/index.js",
     "author": "clevok",
     "license": "ISC",
@@ -11,7 +10,11 @@
     "publishConfig": {
         "access": "public"
     },
-    "dependencies": {},
+    "dependencies": {
+        "@vuex-orm/core": "^0.36.4",
+        "vue": "^3.2.0-beta.8",
+        "vuex": "^3.6.2"
+    },
     "devDependencies": {
         "@babel/core": "^7.13.15",
         "@babel/preset-env": "^7.13.15",

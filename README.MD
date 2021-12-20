@@ -1,42 +1,124 @@
-## 定义
+## 下载
+
+> npm i vue3-typeorm --save
+
+## 使用
+
+### 定义实体模型
 
 ```js
-export enum LiquidUnitEnum {
-    ML = 0,
-    OZ_UA = 1,
-    OZ_US = 2
+import { Entity, PrimaryColumn, Column } from '../../src/index'
+
+/**
+ * 不在追求树状结构, 通过 BookService(Book.Get(Entity)).QueryUser() 来获取对对应的数据
+ */
+@Entity()
+class Book_Entity {
+    @PrimaryColumn()
+    bookId: string
+
+    @Column({
+        comment: '',
+        transformer: [allowType(['string', 'null']), toString()],
+    })
+    bookName: string
+
+    author?: string
 }
-export const LiquidUnitLabel = DefineEnumLabel({
-    Enum: LiquidUnitEnum,
-    Values: [
-        { value: LiquidUnitEnum.ML, label: 'ml' },
-        { value: LiquidUnitEnum.OZ_UA, label: 'oz' },
-        { value: LiquidUnitEnum.OZ_US, label: 'oz' },
-    ]
-})
 
-LiquidUnitLabel.ML // { value: LiquidUnitEnum.ML, label: 'ml' }
-LiquidUnitLabel.values() // [ {value: LiquidUnitEnum.ML, label: 'ml'}... ]
-LiquidUnitLabel(LiquidUnitEnum.ML) // ml
 
+// 往缓存里插入实例
+UserEntity.Insert(user2)
+
+const UserTable = Table(UserEntity)
+UserTable.Insert(user2)
 ```
-
-### 问题
-和一开始设想不一致,没有找到理想的办法
 
 ```js
-const LiquidUnitEnum = DefineEnum({
-    ML: [0, 'ml'],
-    OZ_UA: [1, 'oz'],
-    OZ_US: [2, 'oz'],
-})
+const UserRepository = getRepository(UserEntity)
 
-LiquidUnitEnum.ML // 1
-LiquidUnitEnum(LiquidUnitEnum.ML) // ml
+UserRepository.find() // 响应式容器,返回所有的
+UserRepository.insert() // 仅仅往容器里面插入内容, 不涉及到与后端的交互
 ```
 
-存在问题
 ```js
-const unit = LiquidUnitEnum.ML  // number
+const userModal = getModal(UserEntity)
+
+userModal.find()
 ```
-类型定义是number,当后期数据量躲起来, 类型为number太难快速定位了,远不如 类型为 enum, 没有好的方法了
+
+```js
+fetch().then(({ data }) => {
+    data.map((value) => {
+        return UserEntity.insert(value)
+    })
+})
+```
+
+```js
+// 理想的modal, 前端设计成了各种交互
+class UserModal {
+    GetDetail(id) {
+        const user = UserEntity.findOne({ id })
+        const userBindBooks = UserBindBooksEntity.find({ userId: id })
+        const books = userBindBooks.map((bind) => {
+            return BookEntity.findOne({ id: bind.bookId })
+        })
+
+        return (user.books = books)
+    }
+}
+```
+
+但是实际上应该不会设计成这样, 一般情况下, 后端都给你组好结构了, 你不需要自己拼装
+
+例如,一个 api 获取 post 列表
+进入详情页后,通过 postid 获取了所有的 rely[]
+rely 由 user 组成
+
+```js
+interface PostEntity {
+    postId: string
+    author: UserEntity[]
+    rely: RelyEntity[]
+}
+
+class PostModal {
+    Query(params) {
+        const posts = await fetch()
+
+        return posts.map((post) => {
+            return PostEntity.insert({
+                ...post,
+                author: UserEntity.insert(post)
+            })
+        })
+    }
+
+    Delete (post: PostEntity) {
+        await fetch()
+        
+        post.slice()
+        return PostEntity.delete(post)
+    }
+}
+
+class RelyModal {
+    Query (post: PostEntity) {
+        const relys = await fetch()
+
+        return relys.map((rely) => {
+            return RelyEntity.insert({
+                ...rely,
+                relyUser: UserEntity.insert(rely.user)
+            })
+        })
+    }
+
+    Create (rely) {
+        const relys = await fetch(rely)
+
+        return RelyEntity.create(rely)
+    }
+}
+```
