@@ -1,4 +1,4 @@
-import { getPrototype } from './util/prototype'
+import { Metadata } from './util/Metadata'
 
 /**
  * 属性装饰器
@@ -12,12 +12,10 @@ export function Column(
         transformer?: Function[]
     } = {},
 ): PropertyDecorator {
-    return function (target, name) {
-        const proto = getPrototype(target)
-
-        proto.Metadata.addMetadata({
+    return function (/** 属性装饰器,默认指向原型对象 */ target, name) {
+        Metadata(target.constructor as any).addMetadata({
             primary: options.primary || false,
-            column: name,
+            column: String(name),
             transformer: options.transformer || [],
         })
     }

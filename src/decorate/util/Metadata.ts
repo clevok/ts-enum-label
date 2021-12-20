@@ -1,21 +1,23 @@
 /**
  *
- * @param {object} target 原型对象
+ * @param {object} target 构造函数
  * @returns
  */
-export function Metadata(target: Object): ReturnType<typeof useMetadata> {
-    if (Object.prototype.hasOwnProperty.call(target, 'Metadata')) {
-        return target['Metadata']
+export function Metadata(target: {
+    new (): any
+}): ReturnType<typeof useMetadata> {
+    if (Object.prototype.hasOwnProperty.call(target.prototype, 'Metadata')) {
+        return target.prototype['Metadata']
     }
 
-    return (target['Metadata'] = useMetadata())
+    return (target.prototype['Metadata'] = useMetadata())
 }
 
 interface IMetadataCell {
     /** 是否为主键 */
     primary: boolean
     /** 键名 */
-    column: string | symbol
+    column: string
     /** 转换方法 */
     transformer: Function[]
 }
@@ -42,25 +44,5 @@ function useMetadata() {
     return {
         addMetadata,
         findPrimary,
-    }
-}
-
-class MetadataClass {
-    cell: IMetadataCell[] = []
-
-    addMetadata(option: IMetadataCell) {
-        if (!option.primary) {
-            return this.cell.push(option)
-        }
-
-        if (this.findPrimary()) {
-            throw new Error('发现存在多条PrimaryColumn')
-        }
-
-        return this.cell.push(option)
-    }
-
-    findPrimary() {
-        return this.cell.find((cell) => cell.primary)
     }
 }

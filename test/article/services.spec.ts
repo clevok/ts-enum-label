@@ -1,3 +1,4 @@
+// import { Repository } from '../../src/index'
 import { Book_Entity } from './entity'
 import { QueryBooks } from './mock'
 
@@ -15,7 +16,12 @@ test('test book server', async () => {
     const books = await BookService.Query()
 })
 
-function Repository<Entity>(target: { new (): Entity }) {
+function Repository<Entity extends Object>(options: {
+    /** 构造函数 */
+    Constructor: { new (): Entity }
+    /** 主键keyName */
+    PrimaryColumnName: string
+}) {
     const Save = (value: Entity) => {}
 
     return {
@@ -26,12 +32,7 @@ const Operate = (v: any) => {}
 const Manager = (v: any) => {}
 const Resource = (v: any) => {}
 
-Repository(Book_Entity).Save({})
-
-class Repository2<Entity> {
-    constructor(target: { new (): Entity }) {}
-
-    Save(value: Entity) {}
-}
-
-new Repository2(Book_Entity).Save({})
+Repository({ Constructor: Book_Entity, PrimaryColumnName: '' }).Save({
+    bookId: '',
+    bookName: '',
+})
