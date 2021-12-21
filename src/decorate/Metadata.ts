@@ -1,4 +1,4 @@
-import { returnIfHas } from './has'
+import { returnIfHas } from './util/has'
 
 /**
  *
@@ -11,35 +11,47 @@ export function Metadata(target: {
     return returnIfHas(target.prototype, 'Metadata', useMetadata)
 }
 
-interface IMetadataCell {
+export enum MetadataCellType {
+    /** 主键 */
+    PRIMARY = 'primary',
+
+    /** 普通键 */
+    COLUMN = 'column',
+
+    /** 插入前调用的函数 */
+    BEFORE_INSERT = 'BeforeInsert',
+}
+
+export interface IMetadataCell {
     /** 是否为主键 */
-    primary: boolean
+    type: MetadataCellType
     /** 键名 */
-    column: string
+    column: string | symbol
     /** 转换方法 */
     transformer: Function[]
 }
 
 function useMetadata() {
-    const cell: IMetadataCell[] = []
+    const values: IMetadataCell[] = []
 
     const addMetadata = (option: IMetadataCell) => {
-        if (!option.primary) {
-            return cell.push(option)
+        if (option.type !== 'primary') {
+            return values.push(option)
         }
 
         if (findPrimary()) {
             throw new Error('发现存在多条PrimaryColumn')
         }
 
-        return cell.push(option)
+        return values.push(option)
     }
 
     const findPrimary = () => {
-        return cell.find((cell) => cell.primary)
+        return values.find((cell) => cell.type === 'primary')
     }
 
     return {
+        values,
         addMetadata,
         findPrimary,
     }

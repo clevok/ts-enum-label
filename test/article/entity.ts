@@ -1,10 +1,14 @@
-import { Entity, PrimaryColumn, Column } from '../../src/index'
+import { Entity, PrimaryColumn, Column, BeforeInsert } from '../../src/index'
 
-@Entity()
-export class Book_Entity {
+export class Book_Entity extends Entity {
     @PrimaryColumn()
     bookId: string
 
     @Column()
     bookName: string
+
+    @BeforeInsert()
+    beforeInsert() {
+        this.bookId
+    }
 }

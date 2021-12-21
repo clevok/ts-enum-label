@@ -1,4 +1,4 @@
-import { Metadata } from './util/Metadata'
+import { Metadata, MetadataCellType } from './Metadata'
 
 /**
  * 属性装饰器
@@ -6,8 +6,8 @@ import { Metadata } from './util/Metadata'
 export function PrimaryColumn(): PropertyDecorator {
     return function (/** 属性装饰器,默认指向原型对象 */ target, name) {
         Metadata(target.constructor as any).addMetadata({
-            primary: true,
-            column: String(name),
+            type: MetadataCellType.PRIMARY,
+            column: name,
             transformer: [],
         })
     }

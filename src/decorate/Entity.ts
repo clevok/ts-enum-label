@@ -1,8 +1,10 @@
-export function Entity(): ClassDecorator {
-    return function <Target extends Object>(
-        /** 默认指向构造函数 */
-        Constructor,
-    ) {
-        return Constructor
-    }
+export class Entity {
+    /** 插入时间 */
+    __insertTime__ = 0
+
+    /** 更新时间 */
+    __updateTime__ = 0
+
+    /** 删除事件 */
+    __deleteTime__ = 0
 }

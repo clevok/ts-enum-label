@@ -1,4 +1,5 @@
 export { Entity } from './decorate/Entity'
 export { PrimaryColumn } from './decorate/PrimaryColumn'
 export { Column } from './decorate/Column'
-export { Repository } from './decorate/util/Repository'
+export { Repository } from './decorate/Repository'
+export { BeforeInsert } from './decorate/BeforeInsert'

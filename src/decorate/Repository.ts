@@ -1,29 +1,24 @@
 import { reactive } from 'vue'
 import { UnwrapNestedRefs } from '@vue/reactivity'
 import { Metadata } from './Metadata'
-import { returnIfHas } from './has'
+import { returnIfHas } from './util/has'
 
 /**
+ * 数据容器
  * @param {object} target 构造函数
  * @returns
  */
 export function Repository<Entity>(target: { new (): Entity }) {
     return returnIfHas(target.prototype, 'Repository', () => {
-        return useRepository({
-            Constructor: target,
-            PrimaryColumnName: Metadata(target).findPrimary()?.column,
-        })
+        return useRepository(target)
     })
 }
 
-function useRepository<Entity extends Object>(options: {
-    Constructor: { new (): Entity }
-    PrimaryColumnName: string
-}) {
-    const { PrimaryColumnName, Constructor } = options
-    const Cache = new Map<string, UnwrapNestedRefs<Entity>>()
+function useRepository<Entity extends Object>(target: { new (): Entity }) {
+    const PrimaryColumnName = Metadata(target).findPrimary()?.column
+    const Cache = new Map<string | symbol, UnwrapNestedRefs<Entity>>()
 
-    const getPrimaryValue = (value: Entity) => {
+    const getPrimaryValue = (value: Partial<Entity>) => {
         if (!value[PrimaryColumnName]) {
             throw new Error(`主键${String(PrimaryColumnName)}为空`)
         }
@@ -31,10 +26,12 @@ function useRepository<Entity extends Object>(options: {
         return value[PrimaryColumnName]
     }
 
+    const Count = () => {}
+
     /**
      * 通过主键ID获取实例
      */
-    const Get = (value: Entity) => {
+    const Get = (value: Partial<Entity>) => {
         return Cache.get(getPrimaryValue(value))
     }
 
@@ -46,8 +43,8 @@ function useRepository<Entity extends Object>(options: {
      * 创建全新实例
      * 建议使用 @Save方法
      */
-    const Insert = (value: Entity) => {
-        const proxyValue = reactive(new Constructor())
+    const Insert = (value: Partial<Entity>) => {
+        const proxyValue = reactive(new target())
 
         Object.assign(proxyValue, filterObjectProperty(value, proxyValue))
 
@@ -58,7 +55,7 @@ function useRepository<Entity extends Object>(options: {
      * 如果存在即更新
      * 如果不存在着创建
      */
-    const Save = (value: Entity) => {
+    const Save = (value: Partial<Entity>) => {
         const result = Get(value)
 
         if (!result) {
@@ -79,7 +76,7 @@ function useRepository<Entity extends Object>(options: {
 /**
  * 过滤数据的属性
  */
-function filterObjectProperty(source: Object, target: Object) {
+function filterObjectProperty(source: any, target: any) {
     const result = {}
     /**
      * 往实例上添补数据
