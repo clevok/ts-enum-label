@@ -14,4 +14,5 @@ class BookService {
 
 test('test book server', async () => {
     const books = await BookService.Query()
+    console.log(books)
 })

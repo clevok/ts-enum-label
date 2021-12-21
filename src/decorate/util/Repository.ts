@@ -49,7 +49,7 @@ function useRepository<Entity extends Object>(options: {
     const Insert = (value: Entity) => {
         const proxyValue = reactive(new Constructor())
 
-        Object.assign(proxyValue, filterObject(value, proxyValue))
+        Object.assign(proxyValue, filterObjectProperty(value, proxyValue))
 
         return Cache.set(getPrimaryValue(value), proxyValue), proxyValue
     }
@@ -60,12 +60,12 @@ function useRepository<Entity extends Object>(options: {
      */
     const Save = (value: Entity) => {
         const result = Get(value)
-        
+
         if (!result) {
             return Insert(value)
         }
 
-        return Object.assign(result, filterObject(value, result))
+        return Object.assign(result, filterObjectProperty(value, result))
     }
 
     return {
@@ -79,7 +79,7 @@ function useRepository<Entity extends Object>(options: {
 /**
  * 过滤数据的属性
  */
-function filterObject(source: Object, target: Object) {
+function filterObjectProperty(source: Object, target: Object) {
     const result = {}
     /**
      * 往实例上添补数据
