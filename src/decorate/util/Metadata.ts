@@ -1,3 +1,5 @@
+import { returnIfHas } from './has'
+
 /**
  *
  * @param {object} target 构造函数
@@ -6,11 +8,7 @@
 export function Metadata(target: {
     new (): any
 }): ReturnType<typeof useMetadata> {
-    if (Object.prototype.hasOwnProperty.call(target.prototype, 'Metadata')) {
-        return target.prototype['Metadata']
-    }
-
-    return (target.prototype['Metadata'] = useMetadata())
+    return returnIfHas(target.prototype, 'Metadata', useMetadata)
 }
 
 interface IMetadataCell {

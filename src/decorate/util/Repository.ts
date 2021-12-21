@@ -1,37 +1,27 @@
 import { reactive } from 'vue'
+import { UnwrapNestedRefs } from '@vue/reactivity'
 import { Metadata } from './Metadata'
+import { returnIfHas } from './has'
 
 /**
- * 储存库
  * @param {object} target 构造函数
  * @returns
  */
-export function Repository<Con extends { new (): any }>(
-    target: Con,
-): ReturnType<typeof useRepository> {
-    if (Object.prototype.hasOwnProperty.call(target.prototype, 'Repository')) {
-        return target.prototype['Repository'] as useRepository
-    }
-
-    return (target.prototype['Repository'] = useRepository({
-        Constructor: target,
-        PrimaryColumnName: Metadata(target).findPrimary()?.column,
-    }))
+export function Repository<Entity>(target: { new (): Entity }) {
+    return returnIfHas(target.prototype, 'Repository', () => {
+        return useRepository({
+            Constructor: target,
+            PrimaryColumnName: Metadata(target).findPrimary()?.column,
+        })
+    })
 }
 
-/**
- * 储存库
- * @param {object} target 原型对象
- */
 function useRepository<Entity extends Object>(options: {
-    /** 构造函数 */
     Constructor: { new (): Entity }
-    /** 主键keyName */
     PrimaryColumnName: string
 }) {
     const { PrimaryColumnName, Constructor } = options
-
-    const Cache = new Map()
+    const Cache = new Map<string, UnwrapNestedRefs<Entity>>()
 
     const getPrimaryValue = (value: Entity) => {
         if (!value[PrimaryColumnName]) {
@@ -44,13 +34,10 @@ function useRepository<Entity extends Object>(options: {
     /**
      * 通过主键ID获取实例
      */
-    const GetByPrimary = (value: Entity) => {
+    const Get = (value: Entity) => {
         return Cache.get(getPrimaryValue(value))
     }
 
-    /**
-     * 删除实例
-     */
     const Delete = (value: Entity) => {
         return Cache.delete(getPrimaryValue(value))
     }
@@ -62,14 +49,7 @@ function useRepository<Entity extends Object>(options: {
     const Insert = (value: Entity) => {
         const proxyValue = reactive(new Constructor())
 
-        /**
-         * 只写入实例上拥有的属性
-         */
-        Object.keys(value)
-            .filter((key) => Object.keys(proxyValue).includes(key))
-            .forEach((key) => {
-                proxyValue[key] = value[key]
-            })
+        Object.assign(proxyValue, filterObject(value, proxyValue))
 
         return Cache.set(getPrimaryValue(value), proxyValue), proxyValue
     }
@@ -79,14 +59,36 @@ function useRepository<Entity extends Object>(options: {
      * 如果不存在着创建
      */
     const Save = (value: Entity) => {
-        return Object.assign(GetByPrimary(value) || Insert(value), value)
+        const result = Get(value)
+        
+        if (!result) {
+            return Insert(value)
+        }
+
+        return Object.assign(result, filterObject(value, result))
     }
 
     return {
-        GetByPrimary,
+        Get,
         Delete,
         Save,
         Insert,
     }
 }
 
+/**
+ * 过滤数据的属性
+ */
+function filterObject(source: Object, target: Object) {
+    const result = {}
+    /**
+     * 往实例上添补数据
+     */
+    Object.keys(source)
+        .filter((key) => Object.keys(target).includes(key))
+        .forEach((key) => {
+            result[key] = source[key]
+        })
+
+    return result
+}
